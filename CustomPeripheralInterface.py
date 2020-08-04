@@ -7,55 +7,68 @@ Updated on 2019-07-03 by hbldh <henrik.blidh@gmail.com>
 """
 
 import asyncio
-
 from bleak import BleakClient
+from bleak import discover
+import CustomPeripheral as CPLib
 
-i = 0
-SYSCFG_UUID = "f000abcd-0451-4000-b000-000000000000"
-CHAR1_UUID = "f00062d2-0451-4000-b000-000000000000"
-CHAR2_UUID = "f00044dc-0451-4000-b000-000000000000"
-CHAR3_UUID = "f0003c36-0451-4000-b000-000000000000"
-CHAR4_UUID = "f0003a36-0451-4000-b000-000000000000"
-CHAR5_UUID = "f00030d8-0451-4000-b000-000000000000"
+name = "CP001"  # <--- Change to your device's shortened Advertising Name here
+CP = CPLib.CustomPeripheral(name)
 
 # initialize plot here
 # initialize variables here
+i = 0
 
 def notification_handler(sender, data):
-    global i
     """Simple notification handler which prints the data received."""
+    # process data into buffers
+    CP.parse_data(sender, data)
 
-    # process data into buffer
-    #
-    print("{0}: {1}".format(sender, data))
+
+
+
+
+async def enable_notif(CP, client):
+    # await client.start_notify(CP.CHAR1, notification_handler)
+    # await client.start_notify(CP.CHAR2, notification_handler)
+    # await client.start_notify(CP.CHAR3, notification_handler)
+    # await client.start_notify(CP.CHAR4, notification_handler)
+    await client.start_notify(CP.CHAR5, notification_handler)
+
+
+async def disable_notif(CP, client):
+    await client.stop_notify(CP.CHAR1)
+    await client.stop_notify(CP.CHAR2)
+    await client.stop_notify(CP.CHAR3)
+    await client.stop_notify(CP.CHAR4)
+    await client.stop_notify(CP.CHAR5)
 
 
 async def run(address, loop, debug=False):
-    async with BleakClient(address, loop=loop) as client:
-        x = await client.is_connected()
-        print("Connected: {0}".format(x))
+    devices = await discover()
+    device_found = CP.get_address(devices)
+    if device_found:
+        async with BleakClient(CP.ADDR, loop=loop) as client:
+            x = await client.is_connected()
+            print("Connected: {0}".format(x))
 
-        #await client.write_gatt_char(SYSCFG_UUID, bytes.fromhex(cfg_string))
+            # await client.write_gatt_char(SYSCFG_UUID, bytes.fromhex(cfg_string))
 
-        await client.start_notify(CHAR1_UUID, notification_handler)
-        await client.start_notify(CHAR2_UUID, notification_handler)
-        await client.start_notify(CHAR3_UUID, notification_handler)
-        await client.start_notify(CHAR4_UUID, notification_handler)
-        await client.start_notify(CHAR5_UUID, notification_handler)
-        await asyncio.sleep(1000.0, loop=loop)
-        await client.stop_notify(CHAR1_UUID)
-        await client.stop_notify(CHAR2_UUID)
-        await client.stop_notify(CHAR3_UUID)
-        await client.stop_notify(CHAR4_UUID)
-        await client.stop_notify(CHAR5_UUID)
+            # await client.start_notify(HET2.CHAR1, notification_handler)
+            # await client.start_notify(HET2.CHAR2, notification_handler)
+            # await client.start_notify(HET2.CHAR3, notification_handler)
+            # await client.start_notify(HET2.CHAR4, notification_handler)
+            # await client.start_notify(HET2.CHAR5, notification_handler)
+
+            await enable_notif(CP, client)
+            await asyncio.sleep(1000.0, loop=loop)
+            await disable_notif(CP,client)
+    else:
+        print("ERROR: No device found.")
 
 if __name__ == "__main__":
     import os
 
     os.environ["PYTHONASYNCIODEBUG"] = str(1)
 
-    address = (
-        "04:EE:03:9B:7A:8E"  # <--- Change to your device's address here if you are using Windows or Linux
-    )
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(run(address, loop, False))
+    loop.run_until_complete(run(CP, loop, False))
