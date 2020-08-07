@@ -1,12 +1,6 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph import PlotWidget, plot
+from PyQt5 import QtWidgets, uic
 import pyqtgraph as pg
 from collections import deque
-import sys  # We need sys so that we can pass argv to QApplication
-import os
-from random import randint
-from enum import Enum
-
 
 
 class CustomPeripheral:
@@ -85,5 +79,36 @@ class CPPlot: #simple object for plotting only
     def update(self):
         pg.QtGui.QApplication.processEvents()
 
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, *args, **kwargs):
+        self.plot_data = []
+        super(MainWindow, self).__init__(*args, **kwargs)
+        # Load the UI Page
+        uic.loadUi('Basic_CP_GUI.ui', self)
+        self.connectButton.clicked.connect(self.get_device)
+        self.actionQuit.triggered.connect(self.close)
+        self.connect_button = 0
+        self.device_name = "None"
+        self.line_array = []
+        for i in range(5):
+            self.line_array.append(self.plotWidget.plot([], pen=(i, 5)))
 
+    def plot(self, data):
+        self.plot_data.append(data)
+        self.plotWidget.plot(self.plot_data)
+
+    def plot_all(self, plot_list):
+        for i, data in enumerate(plot_list):
+            self.line_array[i].setData(data)
+
+    def get_device(self):
+        # print("Button pressed. Text box says {}".format(self.deviceEntry.text()))
+        self.connect_button = 1
+        self.device_name = self.deviceEntry.text()
+
+    def button_ack(self):
+        self.connect_button = 0
+
+    def display_status(self, msg):
+        self.statusDisp.setText(msg)
 
