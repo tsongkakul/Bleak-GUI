@@ -1,3 +1,19 @@
+"""
+Tanner Songkakul
+
+Helper classes for CustomPeripheral devices and GUIs
+
+Custom Peripheral
+Contains UUIDs and parsing functions for basic custom peripheral.
+
+CPPlot
+Plot only object for plotting characteristic data on separate plots
+
+Main Window
+Full GUI with UI from QT Designer
+"""
+
+
 from PyQt5 import QtWidgets, uic
 import pyqtgraph as pg
 from collections import deque
@@ -27,6 +43,7 @@ class CustomPeripheral:
         self.NAME = name
 
     def get_address(self,device_list):
+        """Search list for device name and retrieve address"""
         for device in device_list:
             if device.name == self.NAME:
                 self.ADDR = device.address
@@ -34,6 +51,7 @@ class CustomPeripheral:
         return False
 
     def parse_data(self, sender,data):
+        """For basic custom peripheral with data in first byte only, extend/replace as needed"""
         if sender == self.CHAR1:
             self.CHAR1_DATA.append(int(data[0]))
             return 1
@@ -54,11 +72,6 @@ class CustomPeripheral:
 class CPPlot: #simple object for plotting only
     def __init__(self,app,win,win_size):
         self.win_size = win_size
-        # self.p1_data = deque([0]*self.win_size)
-        # self.p2_data = deque([0]*self.win_size)
-        # self.p3_data = deque([0]*self.win_size)
-        # self.p4_data = deque([0]*self.win_size)
-        # self.p5_data = deque([0]*self.win_size)
         self.plot_data = [deque([0]*self.win_size) for i in range(5)]
 
         self.app = app
@@ -80,13 +93,14 @@ class CPPlot: #simple object for plotting only
         pg.QtGui.QApplication.processEvents()
 
 class MainWindow(QtWidgets.QMainWindow):
+    #TODO add characteristic and packet printouts
     def __init__(self, *args, **kwargs):
         self.plot_data = []
         super(MainWindow, self).__init__(*args, **kwargs)
         # Load the UI Page
-        uic.loadUi('Basic_CP_GUI.ui', self)
-        self.connectButton.clicked.connect(self.get_device)
-        self.actionQuit.triggered.connect(self.close)
+        uic.loadUi('Basic_CP_GUI.ui', self)  # From QTDesigner
+        self.connectButton.clicked.connect(self.get_device)  # Connect button
+        self.actionQuit.triggered.connect(self.close) # File->Quit
         self.connect_button = 0
         self.device_name = "None"
         self.line_array = []
@@ -94,21 +108,25 @@ class MainWindow(QtWidgets.QMainWindow):
             self.line_array.append(self.plotWidget.plot([], pen=(i, 5)))
 
     def plot(self, data):
+        """Plot single line"""
         self.plot_data.append(data)
         self.plotWidget.plot(self.plot_data)
 
     def plot_all(self, plot_list):
+        # fast update of all data
         for i, data in enumerate(plot_list):
             self.line_array[i].setData(data)
 
     def get_device(self):
-        # print("Button pressed. Text box says {}".format(self.deviceEntry.text()))
+        """Connect button press callback, retrieves device name from text box and sets flag"""
         self.connect_button = 1
         self.device_name = self.deviceEntry.text()
 
     def button_ack(self):
+        """Clear button press flag"""
         self.connect_button = 0
 
     def display_status(self, msg):
+        """Display messages"""
         self.statusDisp.setText(msg)
 
