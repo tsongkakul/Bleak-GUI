@@ -3,12 +3,12 @@ Receiving dummy data transmitted over BLE from CustomPeripheral (https://github.
 
 ## Contents:
 
-#custom_peripheral.py 
+# custom_peripheral.py 
 Module containing CustomPeripheral Class and MainWindow Class with GUI designed in QTDesigner
 
-#CustomPeripheralPlot.py
+# CustomPeripheralPlot.py
 Example showing plotting only
 
-#CustomPeripheralGUI.py
+# CustomPeripheralGUI.py
 Full GUI example with plotting
 
