@@ -8,6 +8,7 @@ from bleak import BleakClient
 from bleak import discover
 import CustomPeripheral as CPLib
 from pyqtgraph.Qt import QtGui
+
 import pyqtgraph as pg
 
 # User Settings
@@ -15,7 +16,8 @@ name = "CP001"  # <--- Change to your device's shortened Advertising Name here
 window_length = 100  # Length of rolling windows.
 
 # Globals
-CP = CPLib.CustomPeripheral(name)
+CP = CPLib.CustomPeripheral()
+CP.set_name(name)
 app = QtGui.QApplication([])
 win = pg.GraphicsLayoutWidget(show=True, title="Custom Peripheral")
 CP_plot = CPLib.CPPlot(app, win, window_length)

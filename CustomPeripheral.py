@@ -5,12 +5,13 @@ from collections import deque
 import sys  # We need sys so that we can pass argv to QApplication
 import os
 from random import randint
+from enum import Enum
 
 
 
 class CustomPeripheral:
-    def __init__(self, name):
-        self.NAME = name
+    def __init__(self):
+        self.NAME = "unknown"
         self.ADDR = "unknown"
         self.SYSCFG = "f000abcd-0451-4000-b000-000000000000"
         self.CHAR1 = "f00062d2-0451-4000-b000-000000000000"
@@ -18,13 +19,18 @@ class CustomPeripheral:
         self.CHAR3 = "f0003c36-0451-4000-b000-000000000000"
         self.CHAR4 = "f0003a36-0451-4000-b000-000000000000"
         self.CHAR5 = "f00030d8-0451-4000-b000-000000000000"
+        self.CHAR_LIST = [self.CHAR1, self.CHAR2, self.CHAR3, self.CHAR4, self.CHAR5]
         self.CHAR1_DATA =[]
         self.CHAR2_DATA =[]
         self.CHAR3_DATA =[]
         self.CHAR4_DATA =[]
         self.CHAR5_DATA =[]
+        self.ALL_DATA = [self.CHAR1_DATA, self.CHAR2_DATA, self.CHAR3_DATA, self.CHAR4_DATA, self.CHAR5_DATA]
         self.datacount = 0
+        self.CONNECTED = 0
 
+    def set_name(self,name):
+        self.NAME = name
 
     def get_address(self,device_list):
         for device in device_list:
@@ -51,7 +57,7 @@ class CustomPeripheral:
             return 5
 
 
-class CPPlot:
+class CPPlot: #simple object for plotting only
     def __init__(self,app,win,win_size):
         self.win_size = win_size
         # self.p1_data = deque([0]*self.win_size)
