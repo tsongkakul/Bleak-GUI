@@ -19,7 +19,7 @@ import pyqtgraph as pg
 from collections import deque
 
 
-class CustomPeripheral:
+class CustomPeripheral(object):
     def __init__(self):
         self.NAME = "unknown"
         self.ADDR = "unknown"
