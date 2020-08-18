@@ -116,11 +116,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # fast update of all data
         for i, data in enumerate(plot_list):
             self.line_array[i].setData(data)
-
+    
+    def update_deviceList(self, devices):
+        for i, device in enumerate(devices):
+            self.deviceEntry.addItem(device.name)
+    
     def get_device(self):
         """Connect button press callback, retrieves device name from text box and sets flag"""
         self.connect_button = 1
-        self.device_name = self.deviceEntry.text()
+        self.device_name = self.deviceEntry.currentText()
 
     def button_ack(self):
         """Clear button press flag"""
