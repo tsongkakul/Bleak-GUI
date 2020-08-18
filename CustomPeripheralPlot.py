@@ -13,7 +13,7 @@ Requires bleak, pyqtgraph and included customperipheral library
 import asyncio
 from bleak import BleakClient
 from bleak import discover
-import customperipheral as CPLib
+import CustomPeripheral as CPLib
 from pyqtgraph.Qt import QtGui
 import pyqtgraph as pg
 
