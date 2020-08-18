@@ -13,7 +13,7 @@ from PyQt5 import QtWidgets
 import sys
 import asyncio
 from qasync import QEventLoop
-import customperipheral as cplib
+import CustomPeripheral as cplib
 from bleak import BleakClient
 from bleak import discover
 
@@ -43,9 +43,11 @@ async def button_wait(win):
 
 async def find_device(win, cp):
     """Search for device after button press"""
-    await button_wait(win)  # Wait for button press
     win.display_status("Scanning...")
-    devices = await discover()  # Discover devices on BLE
+    devices = await discover(120)  # Discover devices on BLE, set timeout in accordance to advertising interval
+    win.update_deviceList(devices)
+    win.display_status("Ready")
+    await button_wait(win)  # Wait for button press
     cp.set_name(win.device_name) # Get device name from text input window in GUI
     device_found = cp.get_address(devices) #  Check if device in list
     return device_found
