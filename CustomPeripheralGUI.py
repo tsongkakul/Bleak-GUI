@@ -13,7 +13,7 @@ from PyQt5 import QtWidgets
 import sys
 import asyncio
 from qasync import QEventLoop
-import customperipheral as cplib
+import CustomPeripheral as cplib
 from bleak import BleakClient
 from bleak import discover
 
