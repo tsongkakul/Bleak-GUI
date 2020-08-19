@@ -37,7 +37,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="deviceEntry">
+   <widget class="QComboBox" name="deviceEntry">
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -45,12 +45,6 @@
       <width>131</width>
       <height>20</height>
      </rect>
-    </property>
-    <property name="text">
-     <string>CP001</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="deviceLabel">
