@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
         """Start notifications on all characteristics"""
         for char in cp.CHAR_LIST:
             await client.start_notify(char, notification_handler)
-            print("Notification enabled")
+            #print("Notification enabled")
             win.display_status("Connected!")
         self.timer.start()
         while 1:
