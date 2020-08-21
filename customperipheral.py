@@ -67,10 +67,3 @@ class CustomPeripheral(object):
         if sender == self.CHAR5:
             self.CHAR5_DATA.append(int(data[0]))
             return 5
-
-
-
-
-
-
-

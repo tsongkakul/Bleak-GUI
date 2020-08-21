@@ -17,6 +17,7 @@ import asyncio
 import asyncqt
 
 import bleak
+
 from bleak import BleakClient
 from bleak import discover
 from customperipheral import CustomPeripheral
