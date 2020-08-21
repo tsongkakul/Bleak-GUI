@@ -30,6 +30,7 @@ class CustomPeripheral(object):
         self.CHAR4 = "f0003a36-0451-4000-b000-000000000000"
         self.CHAR5 = "f00030d8-0451-4000-b000-000000000000"
         self.CHAR_LIST = [self.CHAR1, self.CHAR2, self.CHAR3, self.CHAR4, self.CHAR5]
+        #self.CHAR_LIST = [self.CHAR2, self.CHAR3, self.CHAR4, self.CHAR5]
         self.CHAR1_DATA =[]
         self.CHAR2_DATA =[]
         self.CHAR3_DATA =[]
@@ -55,16 +56,16 @@ class CustomPeripheral(object):
         if sender == self.CHAR1:
             self.CHAR1_DATA.append(int(data[0]))
             return 1
-        if sender == self.CHAR2:
+        elif sender == self.CHAR2:
             self.CHAR2_DATA.append(int(data[0]))
             return 2
-        if sender == self.CHAR3:
+        elif sender == self.CHAR3:
             self.CHAR3_DATA.append(int(data[0]))
             return 3
-        if sender == self.CHAR4:
+        elif sender == self.CHAR4:
             self.CHAR4_DATA.append(int(data[0]))
             return 4
-        if sender == self.CHAR5:
+        elif sender == self.CHAR5:
             self.CHAR5_DATA.append(int(data[0]))
             return 5
 

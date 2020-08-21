@@ -26,8 +26,9 @@ cp = CustomPeripheral()
 
 def notification_handler(sender, data):
     """Handle incoming packets."""
-    print("Data received")
-    print(sender)
+    # TODO this still drops packets
+    #print("Data received")
+    #print(sender)
     char = cp.parse_data(sender, data)
 
 
@@ -96,8 +97,9 @@ class MainWindow(QMainWindow):
             await client.start_notify(char, notification_handler)
             print("Notification enabled")
             win.display_status("Connected!")
-            self.timer.start()
-            await asyncio.sleep(5000)
+        self.timer.start()
+        while 1:
+            await asyncio.sleep(0.001) # TODO replace this with device loop
 
     def connect_callback(self):
         connect_task = self.connect_task()
@@ -114,9 +116,10 @@ class MainWindow(QMainWindow):
         """Display messages"""
         self.statusDisp.setText(msg)
 
+
     def update_plot(self):
         # fast update of all data
-        print("Update plot.")
+        # print("Update plot.")
         self.line_array[0].setData(cp.CHAR1_DATA)
         self.line_array[1].setData(cp.CHAR2_DATA)
         self.line_array[2].setData(cp.CHAR3_DATA)
