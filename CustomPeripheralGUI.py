@@ -8,92 +8,130 @@ and plot data on each characteristics.
 
 Requires bleak, pyqt, qasync and included customperipheral library
 """
-
-from PyQt5 import QtWidgets
+from PyQt5 import uic
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+import pyqtgraph as pg
 import sys
 import asyncio
-from qasync import QEventLoop
-import CustomPeripheral as cplib
+import asyncqt
+
+import bleak
+
 from bleak import BleakClient
 from bleak import discover
+from customperipheral import CustomPeripheral
 
-# GLOBALS
-#TODO: find a better way to use this with the notification handler without using as global
-cp = cplib.CustomPeripheral()
+cp = CustomPeripheral()
+
 
 def notification_handler(sender, data):
     """Handle incoming packets."""
-    cp.datacount = cp.datacount + 1
+    # TODO this still drops packets
+    #print("Data received")
+    #print(sender)
     char = cp.parse_data(sender, data)
 
 
-async def plot_handler(cp, win):
-    """Asynchronously update the plot each second """
-    while 1: # TODO: remove loop here to allow disconnect/reconnect
-        win.plot_all(cp.ALL_DATA)
-        await asyncio.sleep(1)
+class MainWindow(QMainWindow):
+    """Main Window."""
+
+    def __init__(self, parent=None):
+        """Initializer."""
+        super().__init__(parent)
+        # Initialize objects and variables
+        self.scan_list = []
+        # Load the UI Page and QTimer
+        uic.loadUi('Basic_CP_GUI.ui', self)  # From QTDesigner
+        self.line_array = []
+        for i in range(5):
+            self.line_array.append(self.plotWidget.plot([], pen=(i, 5)))
+        self.timer = QTimer()
+        self.timer.setInterval(500)
+        self.timer.timeout.connect(self.update_plot)
+        # Attach button callbacks
+        self.scanButton.clicked.connect(self.scan_callback)
+        self.scanBox.activated.connect(self.select_device)
+        self.connectButton.clicked.connect(self.connect_callback)
+        self.actionQuit.triggered.connect(self.close) # File->Quit
+
+    async def device_scan(self):
+        self.display_status("Scanning...")
+        # print('Scanning for devices')
+        if not cp.CONNECTED:
+            self.scanBox.clear()
+            self.scan_list = []
+            devices = await discover(30)
+            # print('scan returns...')
+            for i, device in enumerate(devices):
+                if device.name != "Unknown":
+                    self.scanBox.addItem(device.name)
+                    self.scan_list.append(device)
+                # print(f"{i}: {device.name}")
+            if self.scan_list:
+                cp.NAME = self.scan_list[0].name # required for case when CP is first in list
+                cp.ADDR = self.scan_list[0].address
+                self.display_status("Scan complete!")
+            else:
+                self.display_status("No devices found!")
+
+    def scan_callback(self):
+        scan_task = self.device_scan()
+        asyncio.ensure_future(scan_task, loop=loop)
+
+    async def connect_task(self):
+        self.display_status("Connecting to {}".format(cp.NAME))
+        async with BleakClient(cp.ADDR, loop = loop ) as client:
+            try:
+                x = await client.is_connected()  # Attempt device connection TODO add error messages
+                await self.enable_notif(client)
+            except AttributeError:
+                win.display_status("Unable to connect!")
+            except bleak.exc.BleakDotNetTaskError:
+                win.display_status("Could not get GATT characteristics")
+            except:
+                win.display_status("Error")
+
+    async def enable_notif(self, client):
+        """Start notifications on all characteristics"""
+        for char in cp.CHAR_LIST:
+            await client.start_notify(char, notification_handler)
+            print("Notification enabled")
+            win.display_status("Connected!")
+        self.timer.start()
+        while 1:
+            await asyncio.sleep(0.001) # TODO replace this with device loop
+
+    def connect_callback(self):
+        connect_task = self.connect_task()
+        asyncio.ensure_future(connect_task, loop=loop)
+
+    def select_device(self):
+        if not cp.CONNECTED:
+            cp.NAME = self.scan_list[self.scanBox.currentIndex()].name
+            cp.ADDR = self.scan_list[self.scanBox.currentIndex()].address
+            print(cp.NAME)
+            print(cp.ADDR)
+
+    def display_status(self, msg):
+        """Display messages"""
+        self.statusDisp.setText(msg)
 
 
-async def button_wait(win):
-    """Polling for button press"""
-    while not win.connect_button:  # wait for button press flag to be set in GUI
-        await asyncio.sleep(.01)
-    win.button_ack() # clear button press flag
+    def update_plot(self):
+        # fast update of all data
+        # print("Update plot.")
+        self.line_array[0].setData(cp.CHAR1_DATA)
+        self.line_array[1].setData(cp.CHAR2_DATA)
+        self.line_array[2].setData(cp.CHAR3_DATA)
+        self.line_array[3].setData(cp.CHAR4_DATA)
+        self.line_array[4].setData(cp.CHAR5_DATA)
 
 
-async def find_device(win, cp):
-    """Search for device after button press"""
-    win.display_status("Scanning...")
-    devices = await discover(120)  # Discover devices on BLE, set timeout in accordance to advertising interval
-    win.update_deviceList(devices)
-    win.display_status("Ready")
-    await button_wait(win)  # Wait for button press
-    cp.set_name(win.device_name) # Get device name from text input window in GUI
-    device_found = cp.get_address(devices) #  Check if device in list
-    return device_found
-
-
-async def enable_notif(cp, client):
-    """Start notifications on all characteristics"""
-    for char in cp.CHAR_LIST:
-        await client.start_notify(char, notification_handler)
-    #print("Notifications enabled")
-
-
-async def disable_notif(cp, client):
-    """Stop notifications on all characteristics"""
-    for char in cp.CHAR_LIST:
-        await client.stop_notify(char, notification_handler)
-
-
-async def run(win, cp, loop):
-    """Main asyncio loop"""
-    while 1: # TODO replace this loop to allow for disconnect/reconnect
-        # while not cp.CONNECTED:
-        dev_found = await find_device(win, cp) # Find device address
-        if dev_found:
-            win.display_status("Device {} found! Connecting...".format(cp.NAME))
-            async with BleakClient(cp.ADDR, loop=loop) as client:
-                x = await client.is_connected() # Attempt device connection TODO add error messages
-                win.display_status("Connected!")
-                await enable_notif(cp, client)
-                await plot_handler(cp, win)
-                await disable_notif(cp, client)
-        else:
-            win.display_status("ERROR: Device not found.")
-
-
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    loop = QEventLoop(app)
-    asyncio.set_event_loop(loop)  # NEW must set the event loop
-
-    win = cplib.MainWindow()
-    win.show()
-
-    with loop:  ## context manager calls .close() when loop completes, and releases all resources
-        loop.run_until_complete(run(win, cp, loop))
-
-
-if __name__ == '__main__':
-    main()
+app = QApplication(sys.argv)
+loop = asyncqt.QEventLoop(app)
+asyncio.set_event_loop(loop)  # NEW must set the event loop
+win = MainWindow()
+win.show()
+with loop:
+    sys.exit(loop.run_forever())
